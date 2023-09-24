@@ -1,13 +1,18 @@
-import React, { useState } from 'react';
+import React from 'react';
+
 import { nanoid } from 'nanoid';
 import css from './ContactForm.module.css';
+import { getIsLoading } from 'redux/selectors';
+import { addContact } from 'redux/operations';
 import { useDispatch } from 'react-redux';
-import { addContact } from '../../redux/contactsSlice';
+import { useSelector } from 'react-redux';
+import { useState } from 'react';
 
 export const ContactForm = () => {
   const [name, setName] = useState('');
   const [number, setNumber] = useState('');
   const dispatch = useDispatch();
+  const isLoading = useSelector(getIsLoading);
 
   const handleChange = event => {
     const { name, value } = event.target;
@@ -20,8 +25,10 @@ export const ContactForm = () => {
 
   const handleSubmit = event => {
     event.preventDefault();
-    dispatch(addContact({ name, number }));
-    reset();
+    if (!isLoading) {
+      dispatch(addContact({ name, number }));
+      reset();
+    }
   };
 
   const reset = () => {

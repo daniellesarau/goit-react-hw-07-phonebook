@@ -1,38 +1,49 @@
-import { createSlice, nanoid } from '@reduxjs/toolkit';
+import { createSlice } from '@reduxjs/toolkit';
+import { addContact, fetchContact, deleteContact } from './operations';
 
-const initialState = {
-  contacts: [],
-  filter: '',
+const handlePending = state => {
+  state.isLoading = true;
+};
+
+const handleRejected = (state, action) => {
+  state.isLoading = false;
+  state.error = action.payload;
 };
 
 const contactsSlice = createSlice({
   name: 'contacts',
-  initialState,
-  reducers: {
-    addContact: {
-      reducer(state, action) {
-        state.contacts.push(action.payload);
-      },
-      prepare({ name, number }) {
-        return {
-          payload: {
-            name,
-            number,
-            id: nanoid(),
-          },
-        };
-      },
+  initialState: {
+    items: [],
+    isLoading: false,
+    error: null,
+  },
+
+  extraReducers: {
+    [fetchContact.pending]: handlePending,
+    [fetchContact.fulfilled]: (state, action) => {
+      state.items = action.payload;
+      state.isLoading = false;
+      state.error = null;
     },
-    removeContact(state, action) {
-      state.contacts = state.contacts.filter(
-        contact => contact.id !== action.payload
+    [fetchContact.rejected]: handleRejected,
+    [addContact.pending]: handlePending,
+    [addContact.fulfilled]: (state, action) => {
+      state.items.push(action.payload);
+      state.isLoading = false;
+      state.error = null;
+    },
+    [addContact.rejected]: handleRejected,
+    [deleteContact.pending]: handlePending,
+    [deleteContact.fulfilled]: (state, action) => {
+      const index = state.items.findIndex(
+        contact => contact.id === action.payload.id
       );
+      state.items.splice(index, 1);
+      state.isLoading = false;
+      state.error = null;
     },
-    filter(state, action) {
-      state.filter = action.payload;
-    },
+    [deleteContact.rejected]: handleRejected,
   },
 });
 
-export const { addContact, removeContact, filter } = contactsSlice.actions;
 export default contactsSlice.reducer;
